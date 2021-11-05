@@ -24,7 +24,14 @@ func TestParserDocSetEmpty(t *testing.T) {
 		t.Fatalf("error: %s", err)
 	}
 
-	expectedVal := yamlmeta.NewDocumentBuilder().Position(filepos.NewPosition(1)).BuildInDocumentSet()
+	expectedVal := &yamlmeta.DocumentSet{
+		Items: []*yamlmeta.Document{
+			&yamlmeta.Document{
+				Position: filepos.NewPosition(1),
+			},
+		},
+		Position: filepos.NewUnknownPosition(),
+	}
 
 	printer := yamlmeta.NewPrinterWithOpts(os.Stdout, yamlmeta.PrinterOpts{ExcludeRefs: true})
 
@@ -42,7 +49,14 @@ func TestParserDocSetNewline(t *testing.T) {
 		t.Fatalf("error: %s", err)
 	}
 
-	expectedVal := yamlmeta.NewDocumentBuilder().Position(filepos.NewPosition(1)).BuildInDocumentSet()
+	expectedVal := &yamlmeta.DocumentSet{
+		Items: []*yamlmeta.Document{
+			&yamlmeta.Document{
+				Position: filepos.NewPosition(1),
+			},
+		},
+		Position: filepos.NewUnknownPosition(),
+	}
 
 	printer := yamlmeta.NewPrinterWithOpts(os.Stdout, yamlmeta.PrinterOpts{ExcludeRefs: true})
 
@@ -60,10 +74,20 @@ func TestParserOnlyComment(t *testing.T) {
 		t.Fatalf("error: %s", err)
 	}
 
-	expectedVal := yamlmeta.NewDocumentSet(
-		yamlmeta.NewDocumentBuilder().Position(filepos.NewPosition(1)).Build(),
-		yamlmeta.NewDocumentBuilder().Comment("", filepos.NewPosition(1)).Build(),
-	)
+	expectedVal := &yamlmeta.DocumentSet{
+		Items: []*yamlmeta.Document{
+			&yamlmeta.Document{
+				Position: filepos.NewPosition(1),
+			},
+			&yamlmeta.Document{
+				Comments: []*yamlmeta.Comment{
+					&yamlmeta.Comment{Data: "", Position: filepos.NewPosition(1)},
+				},
+				Position: filepos.NewUnknownPosition(),
+			},
+		},
+		Position: filepos.NewUnknownPosition(),
+	}
 
 	printer := yamlmeta.NewPrinterWithOpts(os.Stdout, yamlmeta.PrinterOpts{ExcludeRefs: true})
 
@@ -83,7 +107,14 @@ func TestParserDoc(t *testing.T) {
 		t.Fatalf("error: %s", err)
 	}
 
-	expectedVal := yamlmeta.NewDocumentBuilder().Position(filepos.NewPosition(1)).BuildInDocumentSet()
+	expectedVal := &yamlmeta.DocumentSet{
+		Items: []*yamlmeta.Document{
+			&yamlmeta.Document{
+				Position: filepos.NewPosition(1),
+			},
+		},
+		Position: filepos.NewUnknownPosition(),
+	}
 
 	printer := yamlmeta.NewPrinterWithOpts(os.Stdout, yamlmeta.PrinterOpts{ExcludeRefs: true})
 
@@ -101,13 +132,20 @@ func TestParserDocWithoutDashes(t *testing.T) {
 		t.Fatalf("error: %s", err)
 	}
 
-	expectedVal := yamlmeta.NewDocumentBuilder().
-		Position(filepos.NewPosition(1)).
-		Value(yamlmeta.NewMapBuilder().
-			Position(filepos.NewPosition(1)).
-			Item("key", 1, filepos.NewPosition(1)).
-			Build()).
-		BuildInDocumentSet()
+	expectedVal := &yamlmeta.DocumentSet{
+		Items: []*yamlmeta.Document{
+			&yamlmeta.Document{
+				Value: &yamlmeta.Map{
+					Items: []*yamlmeta.MapItem{
+						&yamlmeta.MapItem{Key: "key", Value: 1, Position: filepos.NewPosition(1)},
+					},
+					Position: filepos.NewPosition(1),
+				},
+				Position: filepos.NewPosition(1),
+			},
+		},
+		Position: filepos.NewUnknownPosition(),
+	}
 
 	printer := yamlmeta.NewPrinterWithOpts(os.Stdout, yamlmeta.PrinterOpts{ExcludeRefs: true})
 
@@ -120,54 +158,97 @@ func TestParserDocWithoutDashes(t *testing.T) {
 func TestParserRootValue(t *testing.T) {
 	parserExamples{
 		{Description: "string", Data: "abc",
-			Expected: yamlmeta.NewDocumentBuilder().
-				Position(filepos.NewPosition(1)).
-				Value("abc").
-				BuildInDocumentSet(),
+			Expected: &yamlmeta.DocumentSet{
+				Items: []*yamlmeta.Document{
+					&yamlmeta.Document{
+						Value:    "abc",
+						Position: filepos.NewPosition(1),
+					},
+				},
+				Position: filepos.NewUnknownPosition(),
+			},
 		},
 		{Description: "integer", Data: "1",
-			Expected: yamlmeta.NewDocumentBuilder().
-				Position(filepos.NewPosition(1)).
-				Value(1).
-				BuildInDocumentSet(),
+			Expected: &yamlmeta.DocumentSet{
+				Items: []*yamlmeta.Document{
+					&yamlmeta.Document{
+						Value:    1,
+						Position: filepos.NewPosition(1),
+					},
+				},
+				Position: filepos.NewUnknownPosition(),
+			},
 		},
 		{Description: "float", Data: "2000.1",
-			Expected: yamlmeta.NewDocumentBuilder().
-				Position(filepos.NewPosition(1)).
-				Value(2000.1).
-				BuildInDocumentSet(),
+			Expected: &yamlmeta.DocumentSet{
+				Items: []*yamlmeta.Document{
+					&yamlmeta.Document{
+						Value:    2000.1,
+						Position: filepos.NewPosition(1),
+					},
+				},
+				Position: filepos.NewUnknownPosition(),
+			},
 		},
 		{Description: "float (exponent)", Data: "9e3",
-			Expected: yamlmeta.NewDocumentBuilder().
-				Position(filepos.NewPosition(1)).
-				Value(9e3).
-				BuildInDocumentSet(),
+			Expected: &yamlmeta.DocumentSet{
+				Items: []*yamlmeta.Document{
+					&yamlmeta.Document{
+						Value:    9000.0,
+						Position: filepos.NewPosition(1),
+					},
+				},
+				Position: filepos.NewUnknownPosition(),
+			},
 		},
 		{Description: "array", Data: "- 1",
-			Expected: yamlmeta.NewDocumentBuilder().
-				Position(filepos.NewPosition(1)).
-				Value(yamlmeta.NewArrayBuilder().
-					Position(filepos.NewPosition(1)).
-					Item(1, filepos.NewPosition(1)).Build()).
-				BuildInDocumentSet(),
+			Expected: &yamlmeta.DocumentSet{
+				Items: []*yamlmeta.Document{
+					&yamlmeta.Document{
+						Value: &yamlmeta.Array{
+							Items: []*yamlmeta.ArrayItem{
+								&yamlmeta.ArrayItem{Value: 1, Position: filepos.NewPosition(1)},
+							},
+							Position: filepos.NewPosition(1),
+						},
+						Position: filepos.NewPosition(1),
+					},
+				},
+				Position: filepos.NewUnknownPosition(),
+			},
 		},
 		{Description: "map", Data: "key: val",
-			Expected: yamlmeta.NewDocumentBuilder().
-				Position(filepos.NewPosition(1)).
-				Value(yamlmeta.NewMapBuilder().
-					Position(filepos.NewPosition(1)).
-					Item("key", "val", filepos.NewPosition(1)).Build()).
-				BuildInDocumentSet(),
+			Expected: &yamlmeta.DocumentSet{
+				Items: []*yamlmeta.Document{
+					&yamlmeta.Document{
+						Value: &yamlmeta.Map{
+							Items: []*yamlmeta.MapItem{
+								&yamlmeta.MapItem{Key: "key", Value: "val", Position: filepos.NewPosition(1)},
+							},
+							Position: filepos.NewPosition(1),
+						},
+						Position: filepos.NewPosition(1),
+					},
+				},
+				Position: filepos.NewUnknownPosition(),
+			},
 		},
 	}.Check(t)
 }
 
 func TestParserRootString(t *testing.T) {
-	expectedVal := yamlmeta.NewDocumentBuilder().
-		Comment(" comment", filepos.NewPosition(1)).
-		Position(filepos.NewPosition(1)).
-		Value("abc").
-		BuildInDocumentSet()
+	expectedVal := &yamlmeta.DocumentSet{
+		Items: []*yamlmeta.Document{
+			&yamlmeta.Document{
+				Comments: []*yamlmeta.Comment{
+					&yamlmeta.Comment{Data: " comment", Position: filepos.NewPosition(1)},
+				},
+				Value:    "abc",
+				Position: filepos.NewPosition(1),
+			},
+		},
+		Position: filepos.NewUnknownPosition(),
+	}
 
 	parserExamples{
 		// TODO should really be owned by abc
@@ -190,28 +271,44 @@ array:
 	if err != nil {
 		t.Fatalf("error: %s", err)
 	}
-	expectedVal := yamlmeta.NewDocumentBuilder().
-		Position(filepos.NewPosition(1)).
-		Value(yamlmeta.NewMapBuilder().
-			Position(filepos.NewPosition(1)).
-			Items(
-				yamlmeta.NewMapItemBuilder().
-					Key("array").
-					Position(filepos.NewPosition(2)).
-					Value(
-						yamlmeta.NewArrayBuilder().
-							Position(filepos.NewPosition(2)).
-							Item(1, filepos.NewPosition(3)).
-							Item(2, filepos.NewPosition(4)).
-							Item(
-								yamlmeta.NewMapBuilder().
-									Position(filepos.NewPosition(5)).
-									Item("key", "value", filepos.NewPosition(5)).Build(),
-								filepos.NewPosition(5)).
-							Build(),
-					).Build(),
-			).Build(),
-		).BuildInDocumentSet()
+
+	expectedVal := &yamlmeta.DocumentSet{
+		Items: []*yamlmeta.Document{
+			&yamlmeta.Document{
+				Value: &yamlmeta.Map{
+					Items: []*yamlmeta.MapItem{
+						&yamlmeta.MapItem{
+							Key: "array",
+							Value: &yamlmeta.Array{
+								Items: []*yamlmeta.ArrayItem{
+									&yamlmeta.ArrayItem{Value: 1, Position: filepos.NewPosition(3)},
+									&yamlmeta.ArrayItem{Value: 2, Position: filepos.NewPosition(4)},
+									&yamlmeta.ArrayItem{
+										Value: &yamlmeta.Map{
+											Items: []*yamlmeta.MapItem{
+												&yamlmeta.MapItem{
+													Key:      "key",
+													Value:    "value",
+													Position: filepos.NewPosition(5),
+												},
+											},
+											Position: filepos.NewPosition(5),
+										},
+										Position: filepos.NewPosition(5),
+									},
+								},
+								Position: filepos.NewPosition(2),
+							},
+							Position: filepos.NewPosition(2),
+						},
+					},
+					Position: filepos.NewPosition(1),
+				},
+				Position: filepos.NewPosition(1),
+			},
+		},
+		Position: filepos.NewUnknownPosition(),
+	}
 
 	printer := yamlmeta.NewPrinterWithOpts(os.Stdout, yamlmeta.PrinterOpts{ExcludeRefs: true})
 
@@ -237,36 +334,49 @@ map:
 		t.Fatalf("error: %s", err)
 	}
 
-	expectedVal := yamlmeta.NewDocumentBuilder().
-		Position(filepos.NewPosition(1)).
-		Value(yamlmeta.NewMapBuilder().
-			Position(filepos.NewPosition(1)).
-			Items(
-				yamlmeta.NewMapItemBuilder().
-					Comment(" before-map", filepos.NewPosition(2)).
-					Position(filepos.NewPosition(3)).
-					Key("map").
-					Value(yamlmeta.NewMapBuilder().
-						Position(filepos.NewPosition(3)).
-						Items(
-							yamlmeta.NewMapItemBuilder().
-								Comment(" before-key1", filepos.NewPosition(4)).
-								Key("key1").
-								Value("val1").
-								Position(filepos.NewPosition(5)).
-								Comment(" inline-key1", filepos.NewPosition(5)).
-								Build(),
-							yamlmeta.NewMapItemBuilder().
-								Comment(" after-key1", filepos.NewPosition(6)).
-								Comment(" before-key2", filepos.NewPosition(7)).
-								Key("key2").
-								Value("val2").
-								Position(filepos.NewPosition(8)).
-								Build(),
-						).Build(),
-					).Build(),
-			).Build(),
-		).BuildInDocumentSet()
+	expectedVal := &yamlmeta.DocumentSet{
+		Items: []*yamlmeta.Document{
+			&yamlmeta.Document{
+				Value: &yamlmeta.Map{
+					Items: []*yamlmeta.MapItem{
+						&yamlmeta.MapItem{
+							Comments: []*yamlmeta.Comment{
+								&yamlmeta.Comment{Data: " before-map", Position: filepos.NewPosition(2)},
+							},
+							Key: "map",
+							Value: &yamlmeta.Map{
+								Items: []*yamlmeta.MapItem{
+									&yamlmeta.MapItem{
+										Comments: []*yamlmeta.Comment{
+											&yamlmeta.Comment{Data: " before-key1", Position: filepos.NewPosition(4)},
+											&yamlmeta.Comment{Data: " inline-key1", Position: filepos.NewPosition(5)},
+										},
+										Key:      "key1",
+										Value:    "val1",
+										Position: filepos.NewPosition(5),
+									},
+									&yamlmeta.MapItem{
+										Comments: []*yamlmeta.Comment{
+											&yamlmeta.Comment{Data: " after-key1", Position: filepos.NewPosition(6)},
+											&yamlmeta.Comment{Data: " before-key2", Position: filepos.NewPosition(7)},
+										},
+										Key:      "key2",
+										Value:    "val2",
+										Position: filepos.NewPosition(8),
+									},
+								},
+								Position: filepos.NewPosition(3),
+							},
+							Position: filepos.NewPosition(3),
+						},
+					},
+					Position: filepos.NewPosition(1),
+				},
+				Position: filepos.NewPosition(1),
+			},
+		},
+		Position: filepos.NewUnknownPosition(),
+	}
 
 	printer := yamlmeta.NewPrinterWithOpts(os.Stdout, yamlmeta.PrinterOpts{ExcludeRefs: true})
 
@@ -300,68 +410,84 @@ array:
 		t.Fatalf("error: %s", err)
 	}
 
-	expectedVal := yamlmeta.NewDocumentBuilder().
-		Position(filepos.NewPosition(1)).
-		Value(
-			yamlmeta.NewMapBuilder().
-				Position(filepos.NewPosition(1)).
-				Items(
-					yamlmeta.NewMapItemBuilder().
-						Position(filepos.NewPosition(2)).
-						Key("array").
-						Value(
-							yamlmeta.NewArrayBuilder().
-								Position(filepos.NewPosition(2)).
-								Items(
-									yamlmeta.NewArrayItemBuilder().
-										Comment(" before-1", filepos.NewPosition(3)).
-										Position(filepos.NewPosition(4)).
-										Value(1).
-										Comment(" inline-1", filepos.NewPosition(4)).
-										Build(),
-									yamlmeta.NewArrayItemBuilder().
-										Comment(" after-1", filepos.NewPosition(5)).
-										Comment(" before-2", filepos.NewPosition(6)).
-										Position(filepos.NewPosition(7)).
-										Value(2).
-										Build(),
-									yamlmeta.NewArrayItemBuilder().
-										Position(filepos.NewPosition(8)).
-										Value(3).
-										Build(),
-									yamlmeta.NewArrayItemBuilder().
-										Position(filepos.NewPosition(9)).
-										Comment(" empty", filepos.NewPosition(9)).
-										Value(nil).
-										Build(),
-									yamlmeta.NewArrayItemBuilder().
-										Position(filepos.NewPosition(10)).
-										Value(yamlmeta.NewMapBuilder().
-											Position(filepos.NewPosition(10)).
-											Items(yamlmeta.NewMapItemBuilder().
-												Position(filepos.NewPosition(12)).
-												Comment(" on-map", filepos.NewPosition(11)).
-												Key("key").
-												Value("value").
-												Build(),
-											).Build(),
-										).Build(),
-									yamlmeta.NewArrayItemBuilder().
-										Comment(" on-array-item-with-map", filepos.NewPosition(13)).
-										Position(filepos.NewPosition(14)).
-										Value(yamlmeta.NewMapBuilder().
-											Position(filepos.NewPosition(14)).
-											Items(yamlmeta.NewMapItemBuilder().
-												Position(filepos.NewPosition(14)).
-												Key("key").
-												Value("value").
-												Build(),
-											).Build(),
-										).Build(),
-								).Build(),
-						).Build(),
-				).Build(),
-		).BuildInDocumentSet()
+	expectedVal := &yamlmeta.DocumentSet{
+		Items: []*yamlmeta.Document{
+			&yamlmeta.Document{
+				Value: &yamlmeta.Map{
+					Items: []*yamlmeta.MapItem{
+						&yamlmeta.MapItem{
+							Key: "array",
+							Value: &yamlmeta.Array{
+								Items: []*yamlmeta.ArrayItem{
+									&yamlmeta.ArrayItem{
+										Comments: []*yamlmeta.Comment{
+											&yamlmeta.Comment{Data: " before-1", Position: filepos.NewPosition(3)},
+											&yamlmeta.Comment{Data: " inline-1", Position: filepos.NewPosition(4)},
+										},
+										Value:    1,
+										Position: filepos.NewPosition(4),
+									},
+									&yamlmeta.ArrayItem{
+										Comments: []*yamlmeta.Comment{
+											&yamlmeta.Comment{Data: " after-1", Position: filepos.NewPosition(5)},
+											&yamlmeta.Comment{Data: " before-2", Position: filepos.NewPosition(6)},
+										},
+										Value:    2,
+										Position: filepos.NewPosition(7),
+									},
+									&yamlmeta.ArrayItem{Value: 3, Position: filepos.NewPosition(8)},
+									&yamlmeta.ArrayItem{
+										Comments: []*yamlmeta.Comment{
+											&yamlmeta.Comment{Data: " empty", Position: filepos.NewPosition(9)},
+										},
+										Value:    nil,
+										Position: filepos.NewPosition(9),
+									},
+									&yamlmeta.ArrayItem{
+										Value: &yamlmeta.Map{
+											Items: []*yamlmeta.MapItem{
+												&yamlmeta.MapItem{
+													Comments: []*yamlmeta.Comment{
+														&yamlmeta.Comment{Data: " on-map", Position: filepos.NewPosition(11)},
+													},
+													Key:      "key",
+													Value:    "value",
+													Position: filepos.NewPosition(12),
+												},
+											},
+											Position: filepos.NewPosition(10),
+										},
+										Position: filepos.NewPosition(10),
+									},
+									&yamlmeta.ArrayItem{
+										Comments: []*yamlmeta.Comment{
+											&yamlmeta.Comment{Data: " on-array-item-with-map", Position: filepos.NewPosition(13)},
+										},
+										Value: &yamlmeta.Map{
+											Items: []*yamlmeta.MapItem{
+												&yamlmeta.MapItem{
+													Key:      "key",
+													Value:    "value",
+													Position: filepos.NewPosition(14),
+												},
+											},
+											Position: filepos.NewPosition(14),
+										},
+										Position: filepos.NewPosition(14),
+									},
+								},
+								Position: filepos.NewPosition(2),
+							},
+							Position: filepos.NewPosition(2),
+						},
+					},
+					Position: filepos.NewPosition(1),
+				},
+				Position: filepos.NewPosition(1),
+			},
+		},
+		Position: filepos.NewUnknownPosition(),
+	}
 
 	printer := yamlmeta.NewPrinterWithOpts(os.Stdout, yamlmeta.PrinterOpts{ExcludeRefs: true})
 
@@ -384,25 +510,29 @@ func TestParserDocSetComments(t *testing.T) {
 		t.Fatalf("error: %s", err)
 	}
 
-	expectedVal := yamlmeta.NewDocumentSet(
-		yamlmeta.NewDocumentBuilder().
-			Position(filepos.NewPosition(1)).
-			Value(nil).
-			Build(),
-		yamlmeta.NewDocumentBuilder().
-			Comment(" comment-first", filepos.NewPosition(2)).
-			Position(filepos.NewPosition(3)).
-			Value(nil).
-			Build(),
-		yamlmeta.NewDocumentBuilder().
-			Position(filepos.NewPosition(4)).
-			Value(nil).
-			Build(),
-		yamlmeta.NewDocumentBuilder().
-			Comment(" comment-second", filepos.NewPosition(5)).
-			Value(nil).
-			Build(),
-	)
+	expectedVal := &yamlmeta.DocumentSet{
+		Items: []*yamlmeta.Document{
+			&yamlmeta.Document{
+				Position: filepos.NewPosition(1),
+			},
+			&yamlmeta.Document{
+				Comments: []*yamlmeta.Comment{
+					&yamlmeta.Comment{Data: " comment-first", Position: filepos.NewPosition(2)},
+				},
+				Position: filepos.NewPosition(3),
+			},
+			&yamlmeta.Document{
+				Position: filepos.NewPosition(4),
+			},
+			&yamlmeta.Document{
+				Comments: []*yamlmeta.Comment{
+					&yamlmeta.Comment{Data: " comment-second", Position: filepos.NewPosition(5)},
+				},
+				Position: filepos.NewUnknownPosition(),
+			},
+		},
+		Position: filepos.NewUnknownPosition(),
+	}
 
 	printer := yamlmeta.NewPrinterWithOpts(os.Stdout, yamlmeta.PrinterOpts{ExcludeRefs: true})
 
@@ -420,17 +550,20 @@ func TestParserDocSetOnlyComments2(t *testing.T) {
 		t.Fatalf("error: %s", err)
 	}
 
-	expectedVal := yamlmeta.NewDocumentSet(
-		yamlmeta.NewDocumentBuilder().
-			Position(filepos.NewPosition(1)).
-			Value(nil).
-			Build(),
-		yamlmeta.NewDocumentBuilder().
-			Comment(" comment-first", filepos.NewPosition(2)).
-			Position(filepos.NewUnknownPosition()).
-			Value(nil).
-			Build(),
-	)
+	expectedVal := &yamlmeta.DocumentSet{
+		Items: []*yamlmeta.Document{
+			&yamlmeta.Document{
+				Position: filepos.NewPosition(1),
+			},
+			&yamlmeta.Document{
+				Comments: []*yamlmeta.Comment{
+					&yamlmeta.Comment{Data: " comment-first", Position: filepos.NewPosition(2)},
+				},
+				Position: filepos.NewUnknownPosition(),
+			},
+		},
+		Position: filepos.NewUnknownPosition(),
+	}
 
 	printer := yamlmeta.NewPrinterWithOpts(os.Stdout, yamlmeta.PrinterOpts{ExcludeRefs: true})
 
@@ -448,13 +581,17 @@ func TestParserDocSetOnlyComments3(t *testing.T) {
 		t.Fatalf("error: %s", err)
 	}
 
-	expectedVal := yamlmeta.NewDocumentSet(
-		yamlmeta.NewDocumentBuilder().
-			Comment(" comment", filepos.NewPosition(1)).
-			Position(filepos.NewPosition(1)).
-			Value(nil).
-			Build(),
-	)
+	expectedVal := &yamlmeta.DocumentSet{
+		Items: []*yamlmeta.Document{
+			&yamlmeta.Document{
+				Comments: []*yamlmeta.Comment{
+					&yamlmeta.Comment{Data: " comment", Position: filepos.NewPosition(1)},
+				},
+				Position: filepos.NewPosition(1),
+			},
+		},
+		Position: filepos.NewUnknownPosition(),
+	}
 
 	printer := yamlmeta.NewPrinterWithOpts(os.Stdout, yamlmeta.PrinterOpts{ExcludeRefs: true})
 
@@ -472,14 +609,20 @@ func TestParserDocSetOnlyComments(t *testing.T) {
 		t.Fatalf("error: %s", err)
 	}
 
-	expectedVal := yamlmeta.NewDocumentSet(
-		yamlmeta.NewDocumentBuilder().
-			Position(filepos.NewPosition(1)).
-			Build(),
-		yamlmeta.NewDocumentBuilder().
-			Comment(" comment-first", filepos.NewPosition(1)).
-			Build(),
-	)
+	expectedVal := &yamlmeta.DocumentSet{
+		Items: []*yamlmeta.Document{
+			&yamlmeta.Document{
+				Position: filepos.NewPosition(1),
+			},
+			&yamlmeta.Document{
+				Comments: []*yamlmeta.Comment{
+					&yamlmeta.Comment{Data: " comment-first", Position: filepos.NewPosition(1)},
+				},
+				Position: filepos.NewUnknownPosition(),
+			},
+		},
+		Position: filepos.NewUnknownPosition(),
+	}
 
 	printer := yamlmeta.NewPrinterWithOpts(os.Stdout, yamlmeta.PrinterOpts{ExcludeRefs: true})
 
@@ -501,21 +644,29 @@ func TestParserDocSetCommentsNoFirstDashes(t *testing.T) {
 		t.Fatalf("error: %s", err)
 	}
 
-	expectedVal := yamlmeta.NewDocumentSet(
-		yamlmeta.NewDocumentBuilder().
-			Position(filepos.NewPosition(1)).
-			Build(),
-		yamlmeta.NewDocumentBuilder().
-			Comment(" comment-first", filepos.NewPosition(1)).
-			Position(filepos.NewPosition(2)).
-			Build(),
-		yamlmeta.NewDocumentBuilder().
-			Position(filepos.NewPosition(3)).
-			Build(),
-		yamlmeta.NewDocumentBuilder().
-			Comment(" comment-second", filepos.NewPosition(4)).
-			Build(),
-	)
+	expectedVal := &yamlmeta.DocumentSet{
+		Items: []*yamlmeta.Document{
+			&yamlmeta.Document{
+				Position: filepos.NewPosition(1),
+			},
+			&yamlmeta.Document{
+				Comments: []*yamlmeta.Comment{
+					&yamlmeta.Comment{Data: " comment-first", Position: filepos.NewPosition(1)},
+				},
+				Position: filepos.NewPosition(2),
+			},
+			&yamlmeta.Document{
+				Position: filepos.NewPosition(3),
+			},
+			&yamlmeta.Document{
+				Comments: []*yamlmeta.Comment{
+					&yamlmeta.Comment{Data: " comment-second", Position: filepos.NewPosition(4)},
+				},
+				Position: filepos.NewUnknownPosition(),
+			},
+		},
+		Position: filepos.NewUnknownPosition(),
+	}
 
 	printer := yamlmeta.NewPrinterWithOpts(os.Stdout, yamlmeta.PrinterOpts{ExcludeRefs: true})
 
@@ -538,30 +689,41 @@ key:
 		t.Fatalf("error: %s", err)
 	}
 
-	expectedVal := yamlmeta.NewDocumentBuilder().
-		Position(filepos.NewPosition(1)).
-		Value(
-			yamlmeta.NewMapBuilder().
-				Position(filepos.NewPosition(1)).
-				Items(
-					yamlmeta.NewMapItemBuilder().
-						Position(filepos.NewPosition(2)).
-						Key("key").
-						Value(
-							yamlmeta.NewMapBuilder().
-								Position(filepos.NewPosition(2)).
-								Item("nested", true, filepos.NewPosition(3)).
-								Items(
-									yamlmeta.NewMapItemBuilder().
-										Comment(" comment", filepos.NewPosition(4)).
-										Position(filepos.NewPosition(5)).
-										Key("nested").
-										Value(true).
-										Build(),
-								).Build(),
-						).Build(),
-				).Build(),
-		).BuildInDocumentSet()
+	expectedVal := &yamlmeta.DocumentSet{
+		Items: []*yamlmeta.Document{
+			&yamlmeta.Document{
+				Value: &yamlmeta.Map{
+					Items: []*yamlmeta.MapItem{
+						&yamlmeta.MapItem{
+							Key: "key",
+							Value: &yamlmeta.Map{
+								Items: []*yamlmeta.MapItem{
+									&yamlmeta.MapItem{
+										Key:      "nested",
+										Value:    true,
+										Position: filepos.NewPosition(3),
+									},
+									&yamlmeta.MapItem{
+										Comments: []*yamlmeta.Comment{
+											&yamlmeta.Comment{Data: " comment", Position: filepos.NewPosition(4)},
+										},
+										Key:      "nested",
+										Value:    true,
+										Position: filepos.NewPosition(5),
+									},
+								},
+								Position: filepos.NewPosition(2),
+							},
+							Position: filepos.NewPosition(2),
+						},
+					},
+					Position: filepos.NewPosition(1),
+				},
+				Position: filepos.NewPosition(1),
+			},
+		},
+		Position: filepos.NewUnknownPosition(),
+	}
 
 	printer := yamlmeta.NewPrinterWithOpts(os.Stdout, yamlmeta.PrinterOpts{ExcludeRefs: true})
 
@@ -604,67 +766,98 @@ value: &value
 anchored_value: *value
 `
 
-	expectedVal := yamlmeta.NewDocumentBuilder().
-		Position(filepos.NewPosition(1)).
-		Value(
-			yamlmeta.NewMapBuilder().
-				Position(filepos.NewPosition(1)).
-				Items(
-					yamlmeta.NewMapItemBuilder().
-						Comment("@ variable = 123", filepos.NewPosition(2)).
-						Position(filepos.NewPosition(3)).
-						Key("value").
-						Value(
-							yamlmeta.NewMapBuilder().
-								Position(filepos.NewPosition(3)).
-								Items(
-									yamlmeta.NewMapItemBuilder().
-										Position(filepos.NewPosition(4)).
-										// TODO: should be here as well
-										// Comment("@ variable", filepos.NewPosition(4)).
-										Key("path").
-										Value(nil).Build(),
-									yamlmeta.NewMapItemBuilder().
-										Comment("@annotation", filepos.NewPosition(5)).
-										Position(filepos.NewPosition(6)).
-										Key("args").
-										Value(
-											yamlmeta.NewArrayBuilder().
-												Position(filepos.NewPosition(6)).
-												Item(1, filepos.NewPosition(7)).
-												Item(2, filepos.NewPosition(8)).
-												Build(),
-										).Build(),
-								).Build(),
-						).Build(),
-					yamlmeta.NewMapItemBuilder().
-						Position(filepos.NewPosition(9)).
-						Key("anchored_value").
-						Value(
-							yamlmeta.NewMapBuilder().
-								Position(filepos.NewPosition(9)).
-								Items(
-									yamlmeta.NewMapItemBuilder().
-										Position(filepos.NewPosition(4)).
-										Comment("@ variable", filepos.NewPosition(4)).
-										Key("path").
-										Value(nil).Build(),
-									yamlmeta.NewMapItemBuilder().
-										// TODO: should be here as well
-										// Comment("@annotation", filepos.NewPosition(5)).
-										Position(filepos.NewPosition(6)).
-										Key("args").
-										Value(
-											yamlmeta.NewArrayBuilder().
-												Position(filepos.NewPosition(6)).
-												Item(1, filepos.NewPosition(7)).
-												Item(2, filepos.NewPosition(8)).
-												Build(),
-										).Build(),
-								).Build(),
-						).Build(),
-				).Build(),
-		).BuildInDocumentSet()
+	expectedVal := &yamlmeta.DocumentSet{
+		Items: []*yamlmeta.Document{
+			&yamlmeta.Document{
+				Value: &yamlmeta.Map{
+					Items: []*yamlmeta.MapItem{
+						&yamlmeta.MapItem{
+							Key: "value",
+							Comments: []*yamlmeta.Comment{
+								&yamlmeta.Comment{Data: "@ variable = 123", Position: filepos.NewPosition(2)},
+							},
+							Value: &yamlmeta.Map{
+								Items: []*yamlmeta.MapItem{
+									&yamlmeta.MapItem{
+										// TODO should be here as well
+										// Comments: []*yamlmeta.Comment{
+										// 	&yamlmeta.Comment{Data: "@ variable", Position: filepos.NewPosition(4)},
+										// },
+										Key:      "path",
+										Value:    nil,
+										Position: filepos.NewPosition(4),
+									},
+									&yamlmeta.MapItem{
+										Comments: []*yamlmeta.Comment{
+											&yamlmeta.Comment{Data: "@annotation", Position: filepos.NewPosition(5)},
+										},
+										Key: "args",
+										Value: &yamlmeta.Array{
+											Items: []*yamlmeta.ArrayItem{
+												&yamlmeta.ArrayItem{
+													Value:    1,
+													Position: filepos.NewPosition(7),
+												},
+												&yamlmeta.ArrayItem{
+													Value:    2,
+													Position: filepos.NewPosition(8),
+												},
+											},
+											Position: filepos.NewPosition(6),
+										},
+										Position: filepos.NewPosition(6),
+									},
+								},
+								Position: filepos.NewPosition(3),
+							},
+							Position: filepos.NewPosition(3),
+						},
+						&yamlmeta.MapItem{
+							Key: "anchored_value",
+							Value: &yamlmeta.Map{
+								Items: []*yamlmeta.MapItem{
+									&yamlmeta.MapItem{
+										Comments: []*yamlmeta.Comment{
+											&yamlmeta.Comment{Data: "@ variable", Position: filepos.NewPosition(4)},
+										},
+										Key:      "path",
+										Value:    nil,
+										Position: filepos.NewPosition(4),
+									},
+									&yamlmeta.MapItem{
+										// TODO should be here as well
+										// Comments: []*yamlmeta.Comment{
+										// 	&yamlmeta.Comment{Data: "@annotation", Position: filepos.NewPosition(5)},
+										// },
+										Key: "args",
+										Value: &yamlmeta.Array{
+											Items: []*yamlmeta.ArrayItem{
+												&yamlmeta.ArrayItem{
+													Value:    1,
+													Position: filepos.NewPosition(7),
+												},
+												&yamlmeta.ArrayItem{
+													Value:    2,
+													Position: filepos.NewPosition(8),
+												},
+											},
+											Position: filepos.NewPosition(6),
+										},
+										Position: filepos.NewPosition(6),
+									},
+								},
+								Position: filepos.NewPosition(9),
+							},
+							Position: filepos.NewPosition(9),
+						},
+					},
+					Position: filepos.NewPosition(1),
+				},
+				Position: filepos.NewPosition(1),
+			},
+		},
+		Position: filepos.NewUnknownPosition(),
+	}
 
 	// TODO annotations are not properly assigned
 	parserExamples{{Description: "with seq inside anchored data", Data: data, Expected: expectedVal}}.Check(t)
@@ -684,70 +877,103 @@ merged_value:
   other: true
 `
 
-	expectedVal := yamlmeta.NewDocumentBuilder().
-		Position(filepos.NewPosition(1)).
-		Value(
-			yamlmeta.NewMapBuilder().
-				Position(filepos.NewPosition(1)).
-				Items(
-					yamlmeta.NewMapItemBuilder().
-						Comment("@ variable = 123", filepos.NewPosition(2)).
-						Position(filepos.NewPosition(3)).
-						Key("value").
-						Value(
-							yamlmeta.NewMapBuilder().
-								Position(filepos.NewPosition(3)).
-								Items(
-									yamlmeta.NewMapItemBuilder().
-										Position(filepos.NewPosition(4)).
-										Key("path").
-										// TODO: should be here as well
-										// Comment("@ variable", filepos.NewPosition(4)).
-										Build(),
-									yamlmeta.NewMapItemBuilder().
-										Comment("@annotation", filepos.NewPosition(5)).
-										Position(filepos.NewPosition(6)).
-										Key("args").
-										Value(
-											yamlmeta.NewArrayBuilder().
-												Position(filepos.NewPosition(6)).
-												Item(1, filepos.NewPosition(7)).
-												Item(2, filepos.NewPosition(8)).
-												Build(),
-										).Build(),
-								).Build(),
-						).Build(),
-					yamlmeta.NewMapItemBuilder().
-						Position(filepos.NewPosition(9)).
-						Key("merged_value").
-						Value(
-							yamlmeta.NewMapBuilder().
-								Position(filepos.NewPosition(9)).
-								Items(
-									yamlmeta.NewMapItemBuilder().
-										Position(filepos.NewPosition(4)).
-										Key("path").
-										Comment("@ variable", filepos.NewPosition(4)).
-										Build(),
-									yamlmeta.NewMapItemBuilder().
-										// TODO: should be here as well
-										// Comment("@annotation", filepos.NewPosition(5)).
-										Position(filepos.NewPosition(6)).
-										Key("args").
-										Value(
-											yamlmeta.NewArrayBuilder().
-												Position(filepos.NewPosition(6)).
-												Item(1, filepos.NewPosition(7)).
-												Item(2, filepos.NewPosition(8)).
-												Build(),
-										).Build(),
-								).
-								Item("other", true, filepos.NewPosition(11)).
-								Build(),
-						).Build(),
-				).
-				Build(),
-		).BuildInDocumentSet()
+	expectedVal := &yamlmeta.DocumentSet{
+		Items: []*yamlmeta.Document{
+			&yamlmeta.Document{
+				Value: &yamlmeta.Map{
+					Items: []*yamlmeta.MapItem{
+						&yamlmeta.MapItem{
+							Key: "value",
+							Comments: []*yamlmeta.Comment{
+								&yamlmeta.Comment{Data: "@ variable = 123", Position: filepos.NewPosition(2)},
+							},
+							Value: &yamlmeta.Map{
+								Items: []*yamlmeta.MapItem{
+									&yamlmeta.MapItem{
+										// TODO should be here as well
+										// Comments: []*yamlmeta.Comment{
+										// 	&yamlmeta.Comment{Data: "@ variable", Position: filepos.NewPosition(4)},
+										// },
+										Key:      "path",
+										Value:    nil,
+										Position: filepos.NewPosition(4),
+									},
+									&yamlmeta.MapItem{
+										Comments: []*yamlmeta.Comment{
+											&yamlmeta.Comment{Data: "@annotation", Position: filepos.NewPosition(5)},
+										},
+										Key: "args",
+										Value: &yamlmeta.Array{
+											Items: []*yamlmeta.ArrayItem{
+												&yamlmeta.ArrayItem{
+													Value:    1,
+													Position: filepos.NewPosition(7),
+												},
+												&yamlmeta.ArrayItem{
+													Value:    2,
+													Position: filepos.NewPosition(8),
+												},
+											},
+											Position: filepos.NewPosition(6),
+										},
+										Position: filepos.NewPosition(6),
+									},
+								},
+								Position: filepos.NewPosition(3),
+							},
+							Position: filepos.NewPosition(3),
+						},
+						&yamlmeta.MapItem{
+							Key: "merged_value",
+							Value: &yamlmeta.Map{
+								Items: []*yamlmeta.MapItem{
+									&yamlmeta.MapItem{
+										Comments: []*yamlmeta.Comment{
+											&yamlmeta.Comment{Data: "@ variable", Position: filepos.NewPosition(4)},
+										},
+										Key:      "path",
+										Value:    nil,
+										Position: filepos.NewPosition(4),
+									},
+									&yamlmeta.MapItem{
+										// TODO should be here as well
+										// Comments: []*yamlmeta.Comment{
+										// 	&yamlmeta.Comment{Data: "@annotation", Position: filepos.NewPosition(5)},
+										// },
+										Key: "args",
+										Value: &yamlmeta.Array{
+											Items: []*yamlmeta.ArrayItem{
+												&yamlmeta.ArrayItem{
+													Value:    1,
+													Position: filepos.NewPosition(7),
+												},
+												&yamlmeta.ArrayItem{
+													Value:    2,
+													Position: filepos.NewPosition(8),
+												},
+											},
+											Position: filepos.NewPosition(6),
+										},
+										Position: filepos.NewPosition(6),
+									},
+									&yamlmeta.MapItem{
+										Key:      "other",
+										Value:    true,
+										Position: filepos.NewPosition(11),
+									},
+								},
+								Position: filepos.NewPosition(9),
+							},
+							Position: filepos.NewPosition(9),
+						},
+					},
+					Position: filepos.NewPosition(1),
+				},
+				Position: filepos.NewPosition(1),
+			},
+		},
+		Position: filepos.NewUnknownPosition(),
+	}
 
 	// TODO annotations are not properly assigned
 	parserExamples{{Description: "merge", Data: data, Expected: expectedVal}}.Check(t)
@@ -818,8 +1044,7 @@ func (ex parserExample) checkErr(t *testing.T, err error) {
 }
 
 func assertEqual(t *testing.T, parsedValStr string, expectedValStr string) {
-	t.Helper()
 	if parsedValStr != expectedValStr {
-		t.Fatalf("Not equal; -actual, +expected:\n%v\n", difflib.PPDiff(strings.Split(parsedValStr, "\n"), strings.Split(expectedValStr, "\n")))
+		t.Fatalf("Not equal; diff expected...actual:\n%v\n", difflib.PPDiff(strings.Split(expectedValStr, "\n"), strings.Split(parsedValStr, "\n")))
 	}
 }
